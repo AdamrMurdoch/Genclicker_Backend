@@ -41,8 +41,11 @@ router.post("/register", async (req, res) => {
 
     return res.status(201).json({ token, user: userObject });
   } catch (err) {
-    console.error("Register error:", err);
-    return res.status(500).json({ message: "problem creating account" });
+    console.error("Register error:", err); // <--- ADD THIS
+    return res.status(500).json({
+      message: "problem creating account",
+      error: err?.message || String(err),  // <--- TEMPORARY, for debugging
+    });
   }
 });
 
