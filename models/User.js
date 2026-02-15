@@ -18,13 +18,11 @@ const userSchema = new mongoose.Schema({
     },
 }, { timestamps: true})
 
-userSchema.pre('save', function(next){
-    if(this.password && this.isModified())
-    {
-        this.password = Utils.hashPassword(this.password);
-    }
-    next()
-})
+userSchema.pre("save", function () {
+  if (this.isModified("password")) {
+    this.password = Utils.hashPassword(this.password);
+  }
+});
 
 const userModel = mongoose.model('user', userSchema)
 module.exports = userModel
