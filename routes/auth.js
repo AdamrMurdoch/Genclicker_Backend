@@ -10,7 +10,8 @@ router.post('/signin', (req, res) =>
 {
     if(req.body.email == null || req.body.password == null)
     {
-        return res.status(400).json({
+        return res.status(400).json(
+        {
             message: "Please provide an email and password"
         })
     }
@@ -41,7 +42,8 @@ router.post('/signin', (req, res) =>
         }
         else
         {
-            return res.status(400).json({
+            return res.status(400).json(
+            {
                 message: "Password or email is incorrect"
             })
         }

@@ -1,12 +1,10 @@
 require("dotenv").config();
 const express = require("express");
 const router = express.Router();
-
 const User = require("../models/User");
 const Utils = require("../utils");
 const { requireAuth } = require("../middleware/auth");
 
-// Helper: normalize user response to what Unity expects
 function toAuthUser(userDoc) {
   return {
     id: userDoc._id.toString(),
@@ -15,24 +13,31 @@ function toAuthUser(userDoc) {
   };
 }
 
-/**
- * POST /api/auth/register
- * Unity sends: { username, email, password }
- * Returns: { token, user }
- */
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body || {};
 
-    if (!username || !email || !password) {
+    //Checks if all of the required input fields have been filled out
+    if (!username || !email || !password) 
+    {
       return res.status(400).json({ message: "username, email and password are required" });
     }
 
-    const existing = await User.findOne({ email });
-    if (existing) {
+    // Checks if there is already an account with that email
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) 
+    {
       return res.status(400).json({ message: "email already in use" });
     }
 
+    // Checks if the inputted username already exists
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername) 
+    {
+      return res.status(400).json({ message: "username already in use" });
+    }
+
+    //If all details are inputted properly the user account will be created and saved
     const newUser = new User({ username, email, password });
     const saved = await newUser.save();
 
@@ -40,46 +45,50 @@ router.post("/register", async (req, res) => {
     const token = Utils.generateAccessToken(userObject);
 
     return res.status(201).json({ token, user: userObject });
-  } catch (err) {
-    console.error("Register error:", err); // <--- ADD THIS
+  } 
+  catch (err) 
+  {
+    console.error("Register error:", err);
     return res.status(500).json({
       message: "problem creating account",
-      error: err?.message || String(err),  // <--- TEMPORARY, for debugging
+      error: err?.message || String(err),
     });
   }
 });
 
-/**
- * POST /api/auth/login
- * Unity sends: { username, password }
- * But we also allow: { email, password } to be flexible.
- * Returns: { token, user }
- */
 router.post("/login", async (req, res) => {
   try {
     const { username, email, password } = req.body || {};
     const identifier = (email || username || "").trim();
 
-    if (!identifier || !password) {
+    // Checks if any required input fields are empty
+    if (!identifier || !password) 
+    {
       return res.status(400).json({ message: "username/email and password are required" });
     }
 
-    // Try email first if it looks like an email; otherwise try username
     let user = null;
 
-    if (identifier.includes("@")) {
+    // Checks if user has inputted an email instead of a username. If not it will resort to username as intended.
+    if (identifier.includes("@")) 
+    {
       user = await User.findOne({ email: identifier });
     }
-    if (!user) {
+    if (!user) 
+    {
       user = await User.findOne({ username: identifier });
     }
 
-    if (!user) {
+    // Report account as non-existent if user still null after assignment
+    if (!user) 
+    {
       return res.status(400).json({ message: "This account does not exist" });
     }
 
-    const ok = Utils.verifyPassword(password, user.password);
-    if (!ok) {
+    // Decrypts user password and checks it against the inputted password
+    const verified = Utils.verifyPassword(password, user.password);
+    if (!verified) 
+    {
       return res.status(400).json({ message: "Password or username/email is incorrect" });
     }
 
@@ -87,18 +96,16 @@ router.post("/login", async (req, res) => {
     const token = Utils.generateAccessToken(userObject);
 
     return res.json({ token, user: userObject });
-  } catch (err) {
+  } 
+  catch (err) 
+  {
     console.error("Login error:", err);
     return res.status(500).json({ message: "problem signing in" });
   }
 });
 
-/**
- * GET /api/auth/me
- * Requires Authorization: Bearer <token>
- * Returns: { id, username, email }
- */
-router.get("/me", requireAuth, async (req, res) => {
+router.get("/me", requireAuth, async (req, res) => 
+{
   return res.json(req.user);
 });
 

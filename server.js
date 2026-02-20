@@ -5,9 +5,6 @@ const cors = require("cors");
 
 const port = process.env.PORT || 3000;
 
-// --------------------
-// MongoDB connection
-// --------------------
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
@@ -16,14 +13,8 @@ mongoose
     process.exit(1);
   });
 
-// --------------------
-// Express app
-// --------------------
 const app = express();
 
-// --------------------
-// CORS configuration
-// --------------------
 const allowedOrigins = (process.env.CORS_ORIGINS || "")
   .split(",")
   .map(o => o.trim())
@@ -32,23 +23,18 @@ const allowedOrigins = (process.env.CORS_ORIGINS || "")
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow non-browser requests (Unity, curl, server-to-server)
-      if (!origin) return callback(null, true);
-
-      // Allow localhost during development
-      if (
-        origin.startsWith("http://localhost:") ||
-        origin.startsWith("https://localhost:")
-      ) {
+      if (!origin)
+      {
         return callback(null, true);
       }
 
-      // If no CORS_ORIGINS set, allow all
-      if (allowedOrigins.length === 0) {
+      if (allowedOrigins.length === 0) 
+      {
         return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
+      if (allowedOrigins.includes(origin)) 
+      {
         return callback(null, true);
       }
 
@@ -59,25 +45,17 @@ app.use(
   })
 );
 
-// --------------------
-// Body parsing
-// --------------------
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// --------------------
-// Health check
-// --------------------
-app.get("/", (req, res) => {
+app.get("/", (req, res) => 
+{
   res.send("Backend is running");
 });
 
-// --------------------
-// Routes
-// --------------------
 const apiAuthRouter = require("./routes/apiAuth");
 const saveRouter = require("./routes/save");
-const userRouter = require("./routes/user"); // optional/debug
+const userRouter = require("./routes/user");
 
 console.log("apiAuthRouter type:", typeof apiAuthRouter);
 console.log("saveRouter type:", typeof saveRouter);
@@ -87,9 +65,7 @@ app.use("/api/auth", apiAuthRouter);
 app.use("/api/save", saveRouter);
 app.use("/user", userRouter);
 
-// --------------------
-// Start server
-// --------------------
-app.listen(port, () => {
+app.listen(port, () => 
+{
   console.log(`Server listening on port ${port}`);
 });

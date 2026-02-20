@@ -1,19 +1,15 @@
 const express = require("express");
 const router = express.Router();
-
 const Save = require("../models/Save");
 const { requireAuth } = require("../middleware/auth");
 
-/**
- * GET /api/save
- * Returns: { data: { version, save } } or { data: null }
- */
 router.get("/", requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
 
     const doc = await Save.findOne({ userId });
-    if (!doc) {
+    if (!doc) 
+    {
       return res.json({ data: null });
     }
 
@@ -23,17 +19,14 @@ router.get("/", requireAuth, async (req, res) => {
         save: doc.data ?? null
       },
     });
-  } catch (err) {
+  } 
+  catch (err) 
+  {
     console.error("GetSave error:", err);
     return res.status(500).json({ message: "problem getting save" });
   }
 });
 
-/**
- * PUT /api/save
- * Body: { version: number, save: { ... } }
- * Upserts save per userId
- */
 router.put("/", requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -42,19 +35,23 @@ router.put("/", requireAuth, async (req, res) => {
     const version = typeof payload.version === "number" ? payload.version : 1;
     const save = payload.save || {};
 
-    // Optional: minimal validation
-    if (typeof save !== "object" || Array.isArray(save)) {
+    // Checks the format of the player save
+    if (typeof save !== "object" || Array.isArray(save)) 
+    {
       return res.status(400).json({ message: "save must be an object" });
     }
 
+    // If save data is valid it will be saved to the players unique save via userId
     await Save.findOneAndUpdate(
       { userId },
       { $set: { userId, version, data: save } },
       { upsert: true, new: true }
     );
 
-    return res.sendStatus(204); // Unity doesn't need body
-  } catch (err) {
+    return res.sendStatus(204);
+  } 
+  catch (err) 
+  {
     console.error("PutSave error:", err);
     return res.status(500).json({ message: "problem saving data" });
   }

@@ -48,7 +48,8 @@ router.post('/new', (req, res) => {
 
     if(req.body == null)
     {
-        return res.status(400).json({
+        return res.status(400).json(
+        {
             message: "user content is empty"
         })
     }
@@ -57,7 +58,8 @@ router.post('/new', (req, res) => {
     {
         if(user != null)
         {
-            return res.status(400).json({
+            return res.status(400).json(
+            {
                 message: "email already in use"
             })
         }
