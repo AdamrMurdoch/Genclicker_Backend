@@ -56,6 +56,18 @@ router.post("/register", async (req, res) => {
   }
 });
 
+router.get("/login", (req, res) => 
+{
+  return res.json({
+    message: "POST username/email and password to this endpoint to sign in.",
+    expectedBody: {
+      username: "string (username OR email)",
+      password: "string"
+    },
+    note: "Unity WebGL clients send the payload defined in LoginRequest inside AuthManager.cs."
+  });
+});
+
 router.post("/login", async (req, res) => {
   try {
     const { username, email, password } = req.body || {};
