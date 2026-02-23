@@ -15,35 +15,54 @@ mongoose
 
 const app = express();
 
-const allowedOrigins = (process.env.CORS_ORIGINS || "")
-  .split(",")
-  .map(o => o.trim())
-  .filter(Boolean);
+const parseOrigins = (value) =>
+  (value || "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin)
-      {
-        return callback(null, true);
-      }
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-      if (allowedOrigins.length === 0) 
-      {
-        return callback(null, true);
-      }
+const allowedOriginStrings = parseOrigins(process.env.CORS_ORIGINS);
+const allowAllOrigins = allowedOriginStrings.length === 0 || allowedOriginStrings.includes("*");
 
-      if (allowedOrigins.includes(origin)) 
-      {
-        return callback(null, true);
-      }
+const originMatchers = allowedOriginStrings
+  .filter((origin) => origin !== "*")
+  .map((origin) => {
+    if (!origin.includes("*")) 
+    {
+      return (incoming) => incoming === origin;
+    }
 
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    methods: ["GET", "POST", "PUT", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+    const regex = new RegExp(`^${origin.split("*").map(escapeRegex).join(".*")}$`);
+    return (incoming) => regex.test(incoming);
+  });
+
+const isOriginAllowed = (origin) => {
+  if (!origin || allowAllOrigins) 
+  {
+    return true;
+  }
+
+  return originMatchers.some((matcher) => matcher(origin));
+};
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) 
+    {
+      return callback(null, true);
+    }
+
+    console.warn(`CORS blocked for origin: ${origin}`);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  methods: ["GET", "POST", "PUT", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
