@@ -15,20 +15,14 @@ mongoose
 
 const app = express();
 
-const parseOrigins = (value) =>
-  (value || "")
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean);
+const parseOrigins = (value) => (value || "").split(",").map((o) => o.trim()).filter(Boolean);
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const allowedOriginStrings = parseOrigins(process.env.CORS_ORIGINS);
 const allowAllOrigins = allowedOriginStrings.length === 0 || allowedOriginStrings.includes("*");
 
-const originMatchers = allowedOriginStrings
-  .filter((origin) => origin !== "*")
-  .map((origin) => {
+const originMatchers = allowedOriginStrings.filter((origin) => origin !== "*").map((origin) => {
     if (!origin.includes("*")) 
     {
       return (incoming) => incoming === origin;
