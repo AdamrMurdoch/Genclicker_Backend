@@ -6,31 +6,24 @@ const cors = require("cors");
 const port = process.env.PORT || 3000;
 
 // Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => {
-    console.error("MongoDB connection failed:", err.message);
-    process.exit(1);
-  });
+mongoose.connect(process.env.MONGO_URI).then(() => console.log("MongoDB connected")).catch((err) => {
+  console.error("MongoDB connection failed:", err.message);
+  process.exit(1);
+});
 
 const app = express();
 
 const allowedOrigins = (process.env.CORS_ORIGINS || "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+  .split(",").map((s) => s.trim()).filter(Boolean);
 
-app.use(
-  cors({
-    origin: allowedOrigins.length ? allowedOrigins : false,
-    methods: ["GET", "POST", "PUT", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+const corsOptions = {
+  origin: allowedOrigins.length === 0 ? true : allowedOrigins,
+  methods: ["GET", "POST", "PUT", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-// Optional: handle preflight for all routes
-app.options("*", cors());
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 // Body parsing middleware
 app.use(express.json({ limit: "1mb" }));
